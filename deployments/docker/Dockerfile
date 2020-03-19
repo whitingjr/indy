@@ -27,8 +27,8 @@ ADD https://github.com/Yelp/dumb-init/releases/download/v1.1.1/dumb-init_1.1.1_a
 USER root
 
 RUN chmod +x /usr/local/bin/*
-RUN	yum -y update
-RUN	yum -y install wget git tar which curl tree java-1.8.0-openjdk-devel
+RUN	yum -y install wget git tar which curl tree java-11-openjdk-devel
+RUN yum -y update --security
 RUN	yum clean all
 RUN	groupadd -g 1000 indy
 RUN	useradd -u 1000 -g indy --no-create-home -s /bin/false -d /opt/indy indy

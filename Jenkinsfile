@@ -74,7 +74,7 @@ pipeline {
                 allOf {
                     expression { my_bc != null }
                     expression { env.CHANGE_ID == null } // Not pull request
-                    branch 'master'
+                    branch 'jdk11'
                 }
             }
             steps {
