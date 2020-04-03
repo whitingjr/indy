@@ -35,7 +35,7 @@ if [ "$1" == "-e" ]; then
   echo "Use existing $DIR/deployments/launcher/target/indy"
 else
   rm -rf indy
-  tar -zxvf indy-launcher-*-complete.tar.gz
+  tar -zxvf $DIR/deployments/launcher/target/indy-launcher-*-complete.tar.gz
 fi
 
 if [ "x${TEST_REPOS}" != "x" ]; then
