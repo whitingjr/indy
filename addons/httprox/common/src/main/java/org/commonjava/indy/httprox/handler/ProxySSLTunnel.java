@@ -35,6 +35,8 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.commonjava.indy.httprox.jfr.ProxyTunnelDurationEvent;
+
 import static org.commonjava.indy.httprox.util.ChannelUtils.DEFAULT_READ_BUF_SIZE;
 import static org.commonjava.indy.httprox.util.ChannelUtils.flush;
 
@@ -69,7 +71,20 @@ public class ProxySSLTunnel implements Runnable
     {
         try
         {
-            pipeTargetToSinkChannel( sinkChannel, socketChannel );
+            ProxyTunnelDurationEvent event = new ProxyTunnelDurationEvent();
+            if (event.isEnabled()) {
+                event.beginTiming();
+            }
+            try {
+                pipeTargetToSinkChannel( sinkChannel, socketChannel );
+            } finally {
+                if (event.isEnabled()) {
+                    event.stopTiming();
+                    if (event.shouldCommit()) {
+                        event.commit();
+                    }
+                }
+            }
         }
         catch ( Exception e )
         {

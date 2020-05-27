@@ -29,6 +29,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Created by ruhan on 9/19/18.
  */
@@ -36,6 +39,8 @@ public class OutputStreamSinkChannel
                 implements StreamSinkChannel
 {
     private final OutputStream outputStream;
+    private boolean isClosed;
+    private static final Logger logger = LoggerFactory.getLogger( OutputStreamSinkChannel.class.getName() );
 
     public OutputStreamSinkChannel( OutputStream outputStream )
     {
@@ -167,22 +172,27 @@ public class OutputStreamSinkChannel
     @Override
     public int write( ByteBuffer byteBuffer ) throws IOException
     {
-        byte[] bytes = new byte[byteBuffer.remaining()];
-        byteBuffer.get(bytes);
-        outputStream.write( bytes );
-        return bytes.length;
+       if (isOpen()) {
+          byte[] bytes = new byte[byteBuffer.remaining()];
+          byteBuffer.get(bytes);
+          outputStream.write( bytes );
+          return bytes.length;
+       } else {
+          logger.warn("Attempted to write on closed OutputStream.");
+          return 0;
+       }
     }
 
     @Override
     public boolean isOpen()
     {
-        return true;
+        return !isClosed;
     }
 
     @Override
     public void close() throws IOException
     {
-
+       isClosed = true;
     }
 
     @Override

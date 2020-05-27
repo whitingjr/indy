@@ -61,6 +61,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
+import org.commonjava.indy.httprox.jfr.ProxyDurationEvent;
+
 import org.commonjava.cdi.util.weft.WeftExecutorService;
 
 import static com.codahale.metrics.MetricRegistry.name;
@@ -169,21 +171,30 @@ public final class ProxyResponseWriter
     @Override
     public void handleEvent( final ConduitStreamSinkChannel channel )
     {
-        if ( metricsConfig == null || metricRegistry == null )
-        {
-            doHandleEvent( channel );
-            return;
-        }
-
-        Timer timer = metricRegistry.timer( name( metricsConfig.getNodePrefix(), cls, "handleEvent" ) );
-        Timer.Context timerContext = timer.time();
-        try
-        {
-            doHandleEvent( channel );
-        }
-        finally
-        {
-            timerContext.stop();
+        ProxyDurationEvent event = new ProxyDurationEvent();
+        try {
+            if (event.isEnabled()) {
+                event.beginTiming();
+            }
+            Timer timer = metricRegistry.timer( name( metricsConfig.getNodePrefix(), cls, "handleEvent" ) );
+            Timer.Context timerContext = timer.time();
+            try {
+                if ( metricsConfig == null || metricRegistry == null )
+                {
+                    doHandleEvent( channel );
+                    return;
+                }
+                doHandleEvent( channel );
+            } finally {
+                timerContext.stop();
+            }
+        } finally {
+            if (event.isEnabled()) {
+                event.stopTiming();
+                if (event.shouldCommit()) {
+                    event.commit();
+                }
+            }
         }
     }
 
