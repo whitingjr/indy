@@ -17,7 +17,7 @@ pipeline {
         }
         stage('Build') {
             steps {
-                sh 'mvn -B -V clean verify -DskipNpmConfig=false'
+                sh 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk;mvn -B -V clean verify -DskipNpmConfig=false'
             }
         }
         stage('Function Test') {
