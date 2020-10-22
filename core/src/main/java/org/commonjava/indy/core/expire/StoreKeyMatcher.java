@@ -18,10 +18,12 @@ package org.commonjava.indy.core.expire;
 import org.commonjava.indy.model.core.StoreKey;
 import org.commonjava.indy.subsys.infinispan.CacheHandle;
 import org.commonjava.indy.subsys.infinispan.CacheKeyMatcher;
-import org.infinispan.commons.api.BasicCache;
+import org.infinispan.query.Search;
+import org.infinispan.query.SearchManager;
+import org.apache.lucene.search.Query;
 
+import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * A key matcher which is used to match the cache key with store key.
@@ -30,9 +32,6 @@ import java.util.stream.Collectors;
 public class StoreKeyMatcher
         implements CacheKeyMatcher<ScheduleKey>
 {
-
-    //TODO: will have a thought to replace this type of matcher with a ISPN query API in the future to get better performance.
-
     private final String groupName;
 
     public StoreKeyMatcher( final StoreKey key, final String eventType )
@@ -41,11 +40,10 @@ public class StoreKeyMatcher
     }
 
     @Override
-    public Set<ScheduleKey> matches( CacheHandle<ScheduleKey, ?> cacheHandle )
+    public Set matches( CacheHandle<ScheduleKey, ?> cacheHandle )
     {
-        return cacheHandle.execute( BasicCache::keySet )
-                          .stream()
-                          .filter( key -> key != null && key.exists() && key.groupName().equals( groupName ) )
-                          .collect( Collectors.toSet() );
+        SearchManager sm = Search.getSearchManager( cacheHandle.getCache() );
+        Query lq = sm.buildQueryBuilderForClass( ScheduleKey.class ).get().keyword().onField( "groupName" ).matching( this.groupName ).createQuery();
+        return new HashSet<>( sm.getQuery( lq ).list() ) ;
     }
 }
