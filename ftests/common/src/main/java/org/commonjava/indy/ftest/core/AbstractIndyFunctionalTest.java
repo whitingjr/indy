@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.Module;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
 import org.commonjava.indy.action.IndyLifecycleException;
 import org.commonjava.indy.client.core.Indy;
 import org.commonjava.indy.client.core.IndyClientException;
@@ -47,6 +48,8 @@ import javax.enterprise.inject.spi.CDI;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
@@ -161,7 +164,7 @@ public abstract class AbstractIndyFunctionalTest
             config = replace( config, "$$transportPort$$", String.valueOf( cassandraPort ) );
             FileUtils.write( configFile, config );
         }
-
+        purge( testDir );
         startEmbeddedCassandra( configFile, testDir.getPath(), DEFAULT_STARTUP_TIMEOUT );
     }
 
@@ -450,4 +453,18 @@ public abstract class AbstractIndyFunctionalTest
         return val == null || val.length() < 1;
     }
 
+    /* it is known that Cassandra borks if a configuration file exists.
+     *  Purge known configuration files that can be an issue.
+     */
+    private void purge(File testDir)
+    {
+        if (testDir.exists())
+        {
+            Path defaultLog4J = Paths.get(testDir.getPath(), EmbeddedCassandraServerHelper.DEFAULT_LOG4J_CONFIG_FILE);
+            File file = defaultLog4J.toFile();
+            if (file.exists() && file.isFile()) {
+                file.delete();
+            }
+        }
+    }
 }
